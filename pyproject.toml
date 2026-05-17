@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdp-detection-pipeline"
+version = "2.0.0"
+description = "ML-based detection of Specificity-Determining Positions in protein MSAs"
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "Lucas Carrijo de Oliveira", email = "lucas@ebi.ac.uk"}
+]
+keywords = ["bioinformatics", "MSA", "machine-learning", "SDP"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+requires-python = ">=3.10"
+
+# Core dependencies (only what the code actually imports)
+dependencies = [
+    "biopython>=1.81",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "scipy>=1.10",
+    "scikit-learn>=1.2",
+    "fastcluster>=1.2.6",
+    "prince>=0.10.5",
+    "logomaker>=0.8",
+    "wordcloud>=1.9.2",
+    "nltk>=3.8.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "flake8", "mypy"]
+
+[project.scripts]
+sdp-pipeline = "sdp_detection_pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sdp_detection_pipeline*"]
