@@ -10,6 +10,7 @@ import pandas as pd
 import logomaker as lm
 from prince import MCA
 from wordcloud import WordCloud
+from Bio.SeqUtils import seq3
 
 # Default output directory – created on first save
 OUTPUT_DIR = Path("./output")
