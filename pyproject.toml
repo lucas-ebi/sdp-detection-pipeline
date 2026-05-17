@@ -33,7 +33,6 @@ dependencies = [
     "prince>=0.10.5",
     "logomaker>=0.8",
     "wordcloud>=1.9.2",
-    "nltk>=3.8.1",
 ]
 
 [project.optional-dependencies]

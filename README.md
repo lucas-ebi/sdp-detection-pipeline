@@ -14,7 +14,7 @@ Protein families often contain functional subgroups (e.g. different substrate sp
 The pipeline uses:
 
 - **Multiple Correspondence Analysis (MCA)** to project categorical MSA data into a low‑dimensional space.
-- **Agglomerative (single‑linkage) or k‑means clustering** to identify inherent sequence groups, with the optimal number of clusters chosen via silhouette score.
+- **Agglomerative (Ward's method) or k‑means clustering** to identify inherent sequence groups, with the optimal number of clusters chosen via silhouette score.
 - **Random Forest classification** using the cluster labels as target, followed by **feature importance ranking** to select the most discriminative alignment positions.
 - The top positions are designated **Specificity‑Determining Positions (SDPs)** and are reported as a human‑readable profile (residue + position number). Optional visualisations – Pareto charts, perceptual maps, sequence logos per cluster, and word clouds of protein descriptions – facilitate biological interpretation.
 
@@ -45,20 +45,6 @@ If you plan to modify the code, use an editable installation:
 pip install -e .
 ```
 
-### NLTK data (for word clouds)
-
-The word cloud functionality uses `nltk` tokenisers. The first time you use the `--metadata` option, you may need to download the required NLTK resources. This can be done once with:
-
-```python
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-```
-
-or simply by running the pipeline with the `--metadata` flag; the data is downloaded automatically on first use if not already present.
-
 ---
 
 ## Quick Start
@@ -71,7 +57,7 @@ sdp-pipeline msa.fasta --plot --save
 
 - Processes the alignment in `msa.fasta`.
 - Generates all plots and saves them to `./output/`.
-- Prints a table of the top‑3 specificity‑determining positions to the console.
+- Logs a profile table of the top‑3 specificity‑determining positions at INFO level.
 
 To include word clouds of protein descriptions, supply a metadata file in **UniProt‑style TSV format** (columns must include “Entry Name” and “Protein names”):
 
@@ -92,6 +78,7 @@ A multiple sequence alignment in **FASTA format**. Sequences must be aligned –
 ### Metadata file (optional)
 
 A tab‑separated file (TSV) with at least the following columns:
+
 - `Entry Name` – matches the first part of the FASTA header before `/`.
 - `Protein names` – descriptive name used for word cloud generation.
 
@@ -102,12 +89,12 @@ This file can be obtained from UniProt for a given set of accessions.
 ## Pipeline Steps
 
 1. **Loading & indexing** – The MSA is parsed into a `pandas.DataFrame` (rows = sequences, columns = alignment positions). Residue numbers are mapped for headers matching the `Entry/start-end` pattern.
-2. **Cleansing** – Columns and rows with more than a specified fraction of gaps (default 90% allowed gaps) are removed. Lower‑case residues (often insertion states) can optionally be treated as gaps. Duplicate sequences are collapsed.
+2. **Cleansing** – Columns and rows that have fewer than a specified fraction of non‑gap characters are removed (default: at least 90% non‑gaps required, i.e. ≤10% gaps tolerated). Lower‑case residues (often insertion states) can optionally be treated as gaps. Duplicate sequences are collapsed.
 3. **Dimensionality reduction** – Multiple Correspondence Analysis (MCA) is performed on the categorical MSA (amino acid letters at each position). The sequences are projected into a continuous 2‑dimensional space.
-4. **Clustering** – Optimal number of clusters is determined by silhouette score, testing a range (default 2–10). Two algorithms are supported: **single‑linkage** (via `fastcluster`) and **k‑means**. The cluster labels serve as the target variable for the subsequent feature selection.
+4. **Clustering** – Optimal number of clusters is determined by silhouette score, testing a range (default 2–10). Two algorithms are supported: **Ward's agglomerative clustering** (via `fastcluster`, option name `"single-linkage"`) and **k‑means**. The cluster labels serve as the target variable for the subsequent feature selection.
 5. **Random Forest classification & feature importance** – The cleansed MSA is one‑hot encoded, and a Random Forest classifier is trained to predict the cluster labels. Feature importances are aggregated per alignment column (by summing the importances of all amino‑acid one‑hot features that map to the same column). Columns are then ranked by summed importance.
 6. **SDP selection** – The most important columns are selected either by taking the top *N* columns (`--top_n`) or by a cumulative importance threshold (default 0.9). These are the candidate Specificity‑Determining Positions.
-7. **Output generation** – A profile table listing the amino acid and residue number at each SDP for every sequence is printed. Optionally, a series of visualisations are produced (see below).
+7. **Output generation** – A profile table listing the amino acid and residue number at each SDP for every sequence is logged at INFO level. Sequence logos are always produced; gap heatmaps, Pareto chart, and perceptual map require `--plot`; word clouds require `--metadata`.
 
 ---
 
@@ -146,7 +133,7 @@ raw = load_msa("msa.fasta")
 positions = map_positions(raw)
 
 pipe = Pipeline([
-    ("clean", CleanseTransformer(threshold=0.9)),
+    ("clean", CleanseTransformer()),
     ("sdp", MCAClusterFeatureSelector(
         cluster_method="single-linkage",
         top_n=5,
@@ -155,9 +142,12 @@ pipe = Pipeline([
 ])
 pipe.fit(raw)
 
-# Access results
-print(pipe.named_steps["sdp"].selected_columns_)   # list of SDP column indices
-print(pipe.named_steps["sdp"].column_importances_) # ranked importances
+sdp_step = pipe.named_steps["sdp"]
+print(sdp_step.selected_columns_)    # list of SDP column indices
+print(sdp_step.column_importances_)  # ranked importances
+
+profiles = build_profiles(raw, positions, sdp_step.selected_columns_)
+print(profiles)
 ```
 
 The fitted pipeline can be serialised with `joblib.dump` and reused on new alignments (provided they share the same set of columns after cleansing).
@@ -165,7 +155,8 @@ The fitted pipeline can be serialised with `joblib.dump` and reused on new align
 Hyperparameter search is also straightforward:
 
 ```python
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, make_scorer
+from sklearn.metrics import silhouette_score
 
 param_grid = {
     "clean__threshold": [0.8, 0.9],
