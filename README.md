@@ -210,5 +210,3 @@ This work makes use of:
 - [`logomaker`](https://logomaker.readthedocs.io/)
 - [`Biopython`](https://biopython.org/)
 - [`wordcloud`](https://amueller.github.io/word_cloud/)
-
-Development has been supported by the European Bioinformatics Institute (EMBL‑EBI).
