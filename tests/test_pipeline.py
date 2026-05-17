@@ -1,6 +1,6 @@
 from sklearn.pipeline import Pipeline
-from sdp_detection_pipeline.preprocessing import CleanseTransformer
-from sdp_detection_pipeline.modeling import MCAClusterFeatureSelector
+from specifinder.preprocessing import CleanseTransformer
+from specifinder.modeling import MCAClusterFeatureSelector
 
 def test_full_pipeline_runs(small_msa_df):
     pipe = Pipeline([

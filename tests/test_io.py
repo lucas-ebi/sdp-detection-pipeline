@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from pathlib import Path
 import tempfile
-from sdp_detection_pipeline.io import load_msa, map_positions, build_profiles
+from specifinder.io import load_msa, map_positions, build_profiles
 
 def test_load_msa():
     fasta_content = """>seq1/1-3

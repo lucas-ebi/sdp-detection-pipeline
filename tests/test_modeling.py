@@ -1,5 +1,5 @@
 import pandas as pd
-from sdp_detection_pipeline.modeling import MCAClusterFeatureSelector
+from specifinder.modeling import MCAClusterFeatureSelector
 
 def test_mca_cluster_selector_basic():
     data = [

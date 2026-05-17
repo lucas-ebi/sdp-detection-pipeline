@@ -1,5 +1,5 @@
 import pandas as pd
-from sdp_detection_pipeline.preprocessing import CleanseTransformer
+from specifinder.preprocessing import CleanseTransformer
 
 def test_cleanse_fit_transform(tiny_msa_df):
     ct = CleanseTransformer(threshold=0.5)

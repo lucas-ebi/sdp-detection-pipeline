@@ -5,7 +5,7 @@ import pytest
 import matplotlib
 matplotlib.use("Agg")
 
-from sdp_detection_pipeline.visualization import plot_perceptual_map
+from specifinder.visualization import plot_perceptual_map
 
 
 @pytest.fixture

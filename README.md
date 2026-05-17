@@ -1,4 +1,4 @@
-# SDP Detection Pipeline
+# Specifinder
 
 **Machine‑learning driven identification of Specificity‑Determining Positions (SDPs) in protein multiple sequence alignments.**
 
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Protein families often contain functional subgroups (e.g. different substrate specificities) that cannot be distinguished from overall sequence conservation alone. The **SDP Detection Pipeline** applies a combination of dimensionality reduction, clustering, and supervised feature selection to an input multiple sequence alignment (MSA) in order to pinpoint the columns (alignment positions) that best discriminate among the natural subgroups present in the data.
+Protein families often contain functional subgroups (e.g. different substrate specificities) that cannot be distinguished from overall sequence conservation alone. **Specifinder** applies a combination of dimensionality reduction, clustering, and supervised feature selection to an input multiple sequence alignment (MSA) in order to pinpoint the columns (alignment positions) that best discriminate among the natural subgroups present in the data.
 
 The pipeline uses:
 
@@ -32,8 +32,8 @@ The tool is implemented as a modular `scikit‑learn` compatible pipeline, makin
 ### From source
 
 ```bash
-git clone https://github.com/your-org/sdp-detection-pipeline.git
-cd sdp-detection-pipeline
+git clone https://github.com/lucas-ebi/specifinder.git
+cd specifinder
 pip install .
 ```
 
@@ -49,10 +49,10 @@ pip install -e .
 
 ## Quick Start
 
-The installed package provides a command‑line script `sdp-pipeline`:
+The installed package provides a command‑line script `specifinder`:
 
 ```bash
-sdp-pipeline msa.fasta --plot --save
+specifinder msa.fasta --plot --save
 ```
 
 - Processes the alignment in `msa.fasta`.
@@ -62,7 +62,7 @@ sdp-pipeline msa.fasta --plot --save
 To include word clouds of protein descriptions, supply a metadata file in **UniProt‑style TSV format** (columns must include “Entry Name” and “Protein names”):
 
 ```bash
-sdp-pipeline msa.fasta --metadata uniprot_metadata.tsv --plot --show
+specifinder msa.fasta --metadata uniprot_metadata.tsv --plot --show
 ```
 
 Use `--show` to interactively display plots instead of (or in addition to) saving them.
@@ -124,9 +124,9 @@ A table (pandas `DataFrame`) with:
 The pipeline is built from `scikit‑learn` compatible transformers. You can import it directly into your Python scripts:
 
 ```python
-from sdp_detection_pipeline.io import load_msa, map_positions, build_profiles
-from sdp_detection_pipeline.preprocessing import CleanseTransformer
-from sdp_detection_pipeline.modeling import MCAClusterFeatureSelector
+from specifinder.io import load_msa, map_positions, build_profiles
+from specifinder.preprocessing import CleanseTransformer
+from specifinder.modeling import MCAClusterFeatureSelector
 from sklearn.pipeline import Pipeline
 
 raw = load_msa("msa.fasta")
@@ -184,8 +184,8 @@ print(best_params, best_score)
 If you use this pipeline in your research, please cite the original software and the associated publication (if any). The original module was developed by **Lucas Carrijo de Oliveira** (lucas@ebi.ac.uk). For now, you may reference the repository directly:
 
 ```
-Lucas C. de Oliveira. SDP Detection Pipeline. 2023–2025.
-https://github.com/your-org/sdp-detection-pipeline
+Lucas C. de Oliveira. Specifinder. 2023–2025.
+https://github.com/lucas-ebi/specifinder
 ```
 
 A formal publication is in preparation; check the repository for updates.
