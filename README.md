@@ -152,22 +152,30 @@ print(profiles)
 
 The fitted pipeline can be serialised with `joblib.dump` and reused on new alignments (provided they share the same set of columns after cleansing).
 
-Hyperparameter search is also straightforward:
+Hyperparameter search over the full alignment (clustering is unsupervised, so cross-validation does not apply). Requires at least `max_clusters + 1` unique sequences after cleansing (default: 11):
 
 ```python
-from sklearn.model_selection import GridSearchCV, make_scorer
+from itertools import product
 from sklearn.metrics import silhouette_score
 
 param_grid = {
     "clean__threshold": [0.8, 0.9],
     "sdp__cluster_method": ["single-linkage", "k-means"],
-    "sdp__top_n": [3, 5, None]
+    "sdp__top_n": [3, 5, None],
 }
-grid = GridSearchCV(pipe, param_grid, cv=3, scoring=my_custom_scorer)
-grid.fit(raw)
-```
 
-*(A custom scorer must be defined to evaluate the unsupervised clustering – for example, silhouette score on the MCA coordinates.)*
+best_score, best_params, best_pipe = -1, None, None
+for values in product(*param_grid.values()):
+    params = dict(zip(param_grid.keys(), values))
+    candidate = pipe.set_params(**params)
+    candidate.fit(raw)
+    sdp = candidate.named_steps["sdp"]
+    score = silhouette_score(sdp.coordinates_, sdp.labels_)
+    if score > best_score:
+        best_score, best_params, best_pipe = score, params, candidate
+
+print(best_params, best_score)
+```
 
 ---
 
