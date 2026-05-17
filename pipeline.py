@@ -122,6 +122,8 @@ class CleanseTransformer(BaseEstimator, TransformerMixin):
         self.threshold = threshold
 
     def _mask(self, X):
+        # Work on a copy to avoid side effects
+        X = X.copy()
         bad = [self.indel]
         if self.remove_lowercase:
             bad += [chr(c) for c in range(ord('a'), ord('z') + 1)]
@@ -196,6 +198,9 @@ class MCAClusterFeatureSelector(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         if self.clustering not in ('k-means', 'single-linkage'):
             raise ValueError("clustering must be 'k-means' or 'single-linkage'")
+
+        # FIX: save original index for mapping back to sequence headers later
+        self.input_index_ = X.index
 
         # X is already cleansed and deduplicated by CleanseTransformer
         self.unique_sequences_ = X.reset_index(drop=True)
@@ -370,15 +375,19 @@ def plot_perceptual_map(mca, unique_sequences, coordinates, labels,
         plt.savefig('./output/perceptual_map.png')
 
 
-def generate_wordclouds(original_index, unique_sequences, labels, metadata=None,
+# FIX: renamed first parameter from `original_index` to `cleaned_index`
+# and updated the logic to use the correct index (the one saved during fit).
+def generate_wordclouds(cleaned_index, unique_sequences, labels, metadata=None,
                         column='Protein names', save=False, show=False):
     """
     Build and optionally plot word clouds for each cluster.
 
     Parameters
     ----------
-    original_index : pd.Index
-        Full MSA headers before deduplication.
+    cleaned_index : pd.Index
+        The index of the cleaned, non‑deduplicated sequences
+        (MCAClusterFeatureSelector.input_index_), matching the rows
+        of `unique_sequences` before deduplication.
     unique_sequences : pd.DataFrame
         Deduplicated sequence DataFrame (MCAClusterFeatureSelector.unique_sequences_).
     labels : array-like
@@ -395,8 +404,10 @@ def generate_wordclouds(original_index, unique_sequences, labels, metadata=None,
     wordcloud_data = {}
 
     for label in set(labels):
+        # Indices of the deduplicated table that belong to this cluster
         indices = unique_sequences.iloc[np.where(labels == label)[0]].index
-        headers = original_index[indices]
+        # Map back to the original headers using the saved index
+        headers = cleaned_index[indices]
         entry_names = [h.split('/')[0] for h in headers]
 
         result = meta_df[meta_df['Entry Name'].isin(entry_names)].copy()
@@ -535,8 +546,9 @@ def main():
         )
 
     if args.metadata:
+        # FIX: use the saved input index, not raw_msa.index
         generate_wordclouds(
-            raw_msa.index,
+            analysis_step.input_index_,          # <-- correct headers after cleansing
             analysis_step.unique_sequences_,
             analysis_step.labels_,
             metadata=args.metadata,
