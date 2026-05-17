@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+pd.set_option('future.no_silent_downcasting', True)
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
@@ -39,7 +40,8 @@ class CleanseTransformer(BaseEstimator, TransformerMixin):
             bad += [chr(c) for c in range(ord("a"), ord("z") + 1)]
         else:
             X = X.map(str.upper)
-        return X.replace(bad, np.nan)
+        X = X.replace(bad, np.nan).infer_objects(copy=False)
+        return X.infer_objects(copy=False)
 
     def fit(self, X: pd.DataFrame, y=None) -> "CleanseTransformer":
         masked = self._mask(X)

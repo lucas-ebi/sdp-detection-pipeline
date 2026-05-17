@@ -108,11 +108,14 @@ def plot_perceptual_map(
         for f in selected_feature_names
         if int(f.rsplit("_", 1)[0]) in selected_columns
     ]
-    df_res = mca.column_coordinates(unique_sequences[selected_columns]).loc[residue_features]
-    # Build readable labels: 3‑letter AA code + column number
-    df_res.index = pd.Index(
-        [seq3(feat.rsplit("_", 1)[1]) + feat.rsplit("_", 1)[0] for feat in df_res.index]
-    )
+
+    # Prince index entries use "__" as separator (e.g. "200__A")
+    # but residue_features uses "_" (e.g. "200_A")
+    coord_df = mca.column_coordinates(unique_sequences[selected_columns])
+    pairs = [entry.rsplit("__", 1) for entry in coord_df.index]
+    mask = [f"{c}_{a}" in residue_features for c, a in pairs]
+    df_res = coord_df[mask]
+    df_res.index = pd.Index([f"{seq3(a)}{c}" for c, a in [p for p, m in zip(pairs, mask) if m]])
 
     fig = plt.figure(figsize=(8, 6))
     unique_labels = sorted(set(labels))

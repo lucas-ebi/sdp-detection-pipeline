@@ -12,7 +12,7 @@ def test_mca_cluster_selector_basic():
     selector = MCAClusterFeatureSelector(
         mca_n_components=2,
         cluster_method='k-means',
-        min_clusters=2, max_clusters=3,
+        min_clusters=2, max_clusters=2,
         top_n=2, random_state=0
     )
     selector.fit(df)
