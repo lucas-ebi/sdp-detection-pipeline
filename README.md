@@ -181,9 +181,9 @@ print(best_params, best_score)
 
 ## Citation
 
-If you use this pipeline in your research, please cite the original software and the associated publication (if any). The original module was developed by **Lucas Carrijo de Oliveira** (lucas@ebi.ac.uk). For now, you may reference the repository directly:
+If you use this pipeline in your research, please cite the original software and the associated publication (if any). The original module was developed by **Lucas Carrijo de Oliveira** (<lucas@ebi.ac.uk>). For now, you may reference the repository directly:
 
-```
+```text
 Lucas C. de Oliveira. Specifinder. 2023–2025.
 https://github.com/lucas-ebi/specifinder
 ```
